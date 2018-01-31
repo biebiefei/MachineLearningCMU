@@ -15,22 +15,27 @@ $ git clone https://github.com/biebiefei/MachineLearningCMU.git
 
 $ ls
 
+> ... MachineLearningCMU ...
+
+$ cd MachineLearningCMU
+
+$ ls
+
 > Homeworks	README.md aboutGit.md
 
 ## 3. git branch -- make your own branch
 
 $ git branch ${new_branch_name}
+
 (new_branch_name="shutong" suggested :p)
 
-$ git branch checkout ${new_branch_name}
+$ git checkout ${new_branch_name}
 
 $ git branch
 
 > master
 
-> Fei
-
-> * ${new_branch_name}
+> \* ${new_branch_name}
 
 ("*" means your current branch)
 
@@ -40,11 +45,11 @@ $ cd Homeworks
 
 $ ls
 
-> make_derectories.sh
+> make_directories.sh
 
-$ chmod u+x make_derectories.sh
+$ chmod u+x make_directories.sh
 
-$ ./make_derectories.sh
+$ ./make_directories.sh
 
 (This is a shellscript file I made to make directories for all lectures)
 
