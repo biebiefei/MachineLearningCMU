@@ -25,6 +25,14 @@ def IGCalc(DT):
 	IG = topEntro - p1* B1Entro-p2*B2Entro
 	return IG
 
+def transverse(listCol):
+	listRow =[ ]
+	for i in range(len(listCol[0])):
+		row = [ ]
+		for col in listCol:
+			row.append(col[i])
+		listRow.append(row)
+	return listRow
 ###################################
 # csv file read and write
 # read csv file from input file 
@@ -104,14 +112,14 @@ def majorityVote(Col):
 def dtPrint(listCol, ylabel, depth, preAttr, label):
 	result = countResult(listCol[-1], ylabel[0], ylabel[1])
 	if depth == 0:
-		print([str(result[0])+" " + ylabel[1] + "/" + str(result[1]) + ylabel[1]])
+		print([str(result[0])+" " + ylabel[0] + "/" + str(result[1]) + ylabel[1]])
 	else:
-		print("|"*depth + preAttr + "=" + label , [str(result[0])+" " + ylabel[1] + "/" + str(result[1]) + ylabel[1]])
+		print("|"*depth + preAttr + "=" + label , [str(result[0])+" "+ylabel[0]+ "/" + str(result[1])+" "+ylabel[1]])
 ############################
 # Write a stump file to print the result of each stump and output two subcsvfile
-def stump(listCol, ylabel, depth=0, depthLimit, preAttr=" ", label=" "):
+def stump(listCol, ylabel, depth, depthLimit, preAttr, label):
 	dtPrint(listCol, ylabel, depth, preAttr, label)
-	if depth >= 3:
+	if depth >= depthLimit:
 		return majorityVote(listCol[-1])
 	else:
 		top = countResult(listCol[-1], ylabel[0], ylabel[1])
@@ -146,28 +154,75 @@ def stump(listCol, ylabel, depth=0, depthLimit, preAttr=" ", label=" "):
 		return [listCol[mai][0], [mls[0], stump(Newfile[mls[0]], ylabel, depth+1, depthLimit, listCol[mai][0], mls[0])], 
 				[mls[1], stump(Newfile[mls[1]], ylabel, depth+1, depthLimit, listCol[mai][0], mls[1])]]
 ####################################################
-# determine results
-def evaluate(DT, row)
+# determine results of each row 
+def evaluate(DT, row, AttrRow):
+	if len(DT) == 1:
+		return DT
+	else:
+		Numb_attr = AttrRow.index(DT[0])
+		if row[Numb_attr] == DT[1][0]:
+			return evaluate(DT[1][1], row, AttrRow)
+		else:
+			return evaluate(DT[2][1], row, AttrRow)
+
+# determine the error 
+def errorValue(predict, ylabel):
+	count1, count2 = 0, 0
+	#print(len(predict),len(ylabel))
+	for i in range(len(predict)):
+		if predict[i] == ylabel[i]:
+			count1 += 1
+		else:
+			count2 += 1
+	error = float(count2)/(float(count1)+float(count2))
+	return error
+# make the label list
+def labelList(DT, csvfile):
+	labellist = []
+	for i in range(1, len(csvfile)):
+		label = evaluate(DT, csvfile[i], csvfile[0])
+		labellist.extend(label)
+	return labellist
+# make label file
+def labelOutput(labelList, filename):
+	file = open(filename, "w")
+	for label in labelList:
+		file.write(label + "\n")
+	file.close()
+
+# make metrics file 
+def metricsOutput(train_error, test_error, metrics):
+	file = open(metrics, "w")
+	file.write("error(train):" + " " + str(train_error)+"\n")
+	file.write("error(test):" + " " + str(test_error))
+	file.close()
+
 # make output file
 def outPut(DT, train, test, trainOUT, testOUT, metrics):
-
-
-
-
+	csv_1, csv_2 = csvReader(train), csvReader(test)
+	csv_train, csv_test = transverse(csv_1), transverse(csv_2)
+	train_predict = labelList(DT, csv_train)
+	test_predict = labelList(DT, csv_test)
+	labelOutput(train_predict, trainOUT)
+	labelOutput(test_predict, testOUT)
+	train_error = errorValue(train_predict, csv_1[-1][1:])
+	test_error = errorValue(test_predict, csv_2[-1][1:])
+	metricsOutput(train_error, test_error, metrics)
 
 ####################################################
 # main function
 if __name__ == '__main__':
 	train = sys.argv[1]
 	test = sys.argv[2]
-	maxDepth = sys.argv[3]
+	maxDepth = int(sys.argv[3])
 	trainOUT = sys.argv[4]
 	testOUT = sys.argv[5]
 	metrics = sys.argv[6]
 	# make decision tree
 	listCol = csvReader(train)
 	yLabel = labelCounter(listCol[-1])
-	DT = stump(listCol, yLabel, 0, maxDepth)
+	print(yLabel)
+	DT = stump(listCol, yLabel, 0, maxDepth, " ", " ")
 	# output all the result
 	outPut(DT, train, test, trainOUT, testOUT, metrics)
 
